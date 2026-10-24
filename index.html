@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Fiber Networking AI</title>
+<meta name="theme-color" content="#0a1020">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+<!-- PWA Manifest (Inline) -->
+<link rel="manifest" href='data:application/manifest+json,{"name":"Fiber Networking AI","short_name":"FiberAI","start_url":".","display":"standalone","background_color":"%230a1020","theme_color":"%230a1020","icons":[{"src":"data:image/svg%2Bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOTIgMTkyIj48cmVjdCB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgcng9IjMyIiBmaWxsPSIjMGExMDIwIi8+PHBhdGggZD0iTTUwIDUwaDkydjMwaC02MnYzMGg1MnYzMEg1MHoiIGZpbGw9IiMyMmM1NWUiLz48L3N2Zz4=","sizes":"192x192","type":"image/svg+xml"}]}'>
+
+<style>
+  :root{
+    --bg:#0a1020;
+    --panel:#101a2e;
+    --panel2:#0d1526;
+    --line:#1e2b45;
+    --text:#e6edf7;
+    --muted:#8ea3c0;
+    --green:#22c55e;
+    --blue:#3b82f6;
+    --amber:#f59e0b;
+    --red:#ef4444;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+    background:radial-gradient(1200px 600px at 50% -10%, #14213d 0%, var(--bg) 55%) no-repeat, var(--bg);
+    color:var(--text);
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .wrap{
+    max-width:1020px;
+    margin:0 auto;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    padding: 12px;
+  }
+
+  /* ---------- HEADER ---------- */
+  header{
+    display:flex;align-items:center;gap:12px;
+    padding:12px 16px;border:1px solid var(--line);border-radius:16px;
+    background:linear-gradient(160deg,#121d33,#0c1424);
+    box-shadow:0 10px 30px rgba(0,0,0,.35);
+    flex: 0 0 auto;
+  }
+  .logo{
+    width:40px;height:40px;flex:0 0 40px;border-radius:12px;
+    background:linear-gradient(135deg,var(--green),var(--blue));
+    display:grid;place-items:center;font-weight:800;font-size:18px;color:#04121f;
+  }
+  h1{font-size:16px;margin:0 0 2px;letter-spacing:.3px;}
+  .sub{font-size:11px;color:var(--muted);margin:0;}
+  .badge{
+    margin-left:auto;font-size:10px;font-family:var(--mono);
+    padding:4px 8px;border-radius:999px;border:1px solid var(--line);
+    color:var(--green);background:#0d2118;white-space:nowrap;
+  }
+
+  /* ---------- TABS ---------- */
+  .tabs{display:flex;gap:6px;margin:12px 0;flex-wrap:nowrap;overflow-x:auto;flex: 0 0 auto;padding-bottom:2px;}
+  .tabs::-webkit-scrollbar{display:none;}
+  .tab{
+    flex:1 0 auto;padding:9px 12px;border-radius:10px;cursor:pointer;
+    border:1px solid var(--line);background:var(--panel2);color:var(--muted);
+    font-size:12px;font-weight:600;letter-spacing:.2px;transition:.15s;white-space:nowrap;
+  }
+  .tab:hover{color:var(--text);border-color:#2b3d5e;}
+  .tab.active{
+    background:linear-gradient(160deg,#16294a,#101c33);
+    color:#fff;border-color:var(--blue);
+    box-shadow:0 0 0 1px rgba(59,130,246,.35), 0 4px 12px rgba(0,0,0,.35);
+  }
+
+  /* ---------- PANELS ---------- */
+  .panel-container{flex: 1 1 auto;overflow-y:auto;display:flex;flex-direction:column;}
+  .panel-container::-webkit-scrollbar{width:6px;}
+  .panel-container::-webkit-scrollbar-thumb{background:#25334f;border-radius:6px;}
+  
+  .panel{display:none;flex-direction:column;height:100%;}
+  .panel.active{display:flex;animation:fade .2s ease;}
+  @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+  .card{
+    border:1px solid var(--line);border-radius:14px;background:var(--panel);
+    padding:14px;box-shadow:0 10px 30px rgba(0,0,0,.25);
+    display:flex;flex-direction:column;flex:1;
+  }
+
+  /* ---------- CHAT ---------- */
+  #chatBox{
+    flex:1;overflow-y:auto;padding:4px;display:flex;flex-direction:column;gap:10px;
+    scroll-behavior:smooth;margin-bottom:10px;
+  }
+  #chatBox::-webkit-scrollbar{width:6px;}
+  #chatBox::-webkit-scrollbar-thumb{background:#25334f;border-radius:6px;}
+  .msg{display:flex;gap:8px;max-width:100%;}
+  .msg .who{
+    width:26px;height:26px;flex:0 0 26px;border-radius:8px;display:grid;place-items:center;
+    font-size:10px;font-weight:800;font-family:var(--mono);
+  }
+  .msg.ai .who{background:#0d2118;color:var(--green);border:1px solid #1c4a34;}
+  .msg.user{align-self:flex-end;flex-direction:row-reverse;}
+  .msg.user .who{background:#101f38;color:var(--blue);border:1px solid #1d3a63;}
+  .bubble{
+    padding:10px 12px;border-radius:12px;font-size:13.5px;line-height:1.5;
+    white-space:pre-wrap;word-wrap:break-word;
+    border:1px solid var(--line);background:#0c1526;max-width:85%;
+  }
+  .msg.user .bubble{background:#122b4a;border-color:#1f4270;}
+  .bubble b{color:var(--green);}
+
+  .chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0;}
+  .chip{
+    font-size:11px;padding:6px 10px;border-radius:999px;cursor:pointer;
+    border:1px solid var(--line);background:#0d1728;color:var(--muted);transition:.15s;
+  }
+  .chip:hover{color:#fff;border-color:var(--blue);background:#122a49;}
+
+  .inputRow{display:flex;gap:6px;flex:0 0 auto;}
+  input[type=text],input[type=number],select{
+    width:100%;padding:12px;border-radius:10px;font-size:16px; /* 16px prevents iOS zoom */
+    background:#0a1424;border:1px solid var(--line);color:var(--text);
+    font-family:inherit;outline:none;transition:.15s;
+  }
+  input:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,130,246,.15);}
+  button.send{
+    padding:12px 18px;border-radius:10px;border:0;cursor:pointer;font-weight:700;font-size:14px;
+    background:linear-gradient(135deg,var(--green),#15803d);color:#03130a;white-space:nowrap;
+  }
+  button.send:hover{filter:brightness(1.1);}
+
+  /* ---------- FORMS ---------- */
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;}
+  .field label{display:block;font-size:11px;color:var(--muted);margin-bottom:4px;letter-spacing:.3px;text-transform:uppercase;font-weight:600;}
+  .hint{font-size:10.5px;color:#63799a;margin-top:3px;}
+  .btn{
+    margin-top:12px;padding:12px 20px;border-radius:10px;border:0;cursor:pointer;
+    font-weight:700;font-size:14px;color:#04121f;
+    background:linear-gradient(135deg,#38bdf8,var(--blue));
+  }
+  .btn:hover{filter:brightness(1.12);}
+  .btn.ghost{background:#0d1728;color:var(--muted);border:1px solid var(--line);margin-left:6px;}
+
+  /* ---------- RESULTS ---------- */
+  .result{margin-top:14px;border-top:1px dashed var(--line);padding-top:12px;}
+  .row{
+    display:flex;justify-content:space-between;gap:10px;
+    padding:6px 0;font-size:13px;border-bottom:1px solid rgba(30,43,69,.55);
+  }
+  .row span:last-child{font-family:var(--mono);color:#cfe0f7;font-weight:600;}
+  .row.total{border-bottom:0;font-size:15px;padding-top:10px;color:#fff;}
+  .row.total span:last-child{color:var(--amber);font-size:16px;}
+  .verdict{
+    margin-top:12px;padding:10px 12px;border-radius:10px;font-size:12.5px;line-height:1.5;
+    border:1px solid;font-weight:600;
+  }
+  .verdict.pass{background:#0d2118;border-color:#1c4a34;color:#7ef2b0;}
+  .verdict.warn{background:#2a1f06;border-color:#5b430f;color:#f7cf6b;}
+  .verdict.fail{background:#2a0f12;border-color:#5f1a20;color:#ff9aa2;}
+  
+  .safety{
+    margin-top:14px;font-size:12px;color:#f2b8bd;background:#251014;border:1px solid #4d1c22;
+    padding:10px 12px;border-radius:10px;line-height:1.5;
+  }
+  footer{text-align:center;font-size:11px;color:#55688a;margin-top:12px;line-height:1.5;flex:0 0 auto;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="logo">F</div>
+    <div>
+      <h1>Fiber Networking AI</h1>
+      <p class="sub">OSP / ISP · FTTH · GPON Field Toolkit</p>
+    </div>
+    <div class="badge">● ONLINE</div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="tab-chat">💬 Assistant</button>
+    <button class="tab" data-tab="tab-budget">📊 Link Budget</button>
+    <button class="tab" data-tab="tab-conv">🔁 dBm ↔ mW</button>
+    <button class="tab" data-tab="tab-fault">📍 Fault Distance</button>
+  </div>
+
+  <div class="panel-container">
+    <!-- ============ CHAT ============ -->
+    <section class="panel active" id="tab-chat">
+      <div class="card">
+        <div id="chatBox"></div>
+
+        <div class="chips">
+          <div class="chip">LOS on ONU</div>
+          <div class="chip">Link budget</div>
+          <div class="chip">Splitter losses</div>
+          <div class="chip">OTDR settings</div>
+          <div class="chip">APC vs UPC</div>
+          <div class="chip">Bend radius</div>
+          <div class="chip">Splice loss</div>
+          <div class="chip">RX power range</div>
+          <div class="chip">Cable pulling</div>
+          <div class="chip">Fiber color code</div>
+        </div>
+
+        <div class="inputRow">
+          <input type="text" id="chatInput" placeholder="Ask anything: LOS, OTDR, splitter..." autocomplete="off">
+          <button class="send" id="sendBtn">Send</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ LINK BUDGET ============ -->
+    <section class="panel" id="tab-budget">
+      <div class="card" style="overflow-y:auto;">
+        <div class="grid">
+          <div class="field">
+            <label>Fiber length (km)</label>
+            <input type="number" id="lbLen" value="5" min="0" step="0.1">
+          </div>
+          <div class="field">
+            <label>Attenuation (dB/km)</label>
+            <select id="lbAtt">
+              <option value="0.35">0.35 — 1310 nm (G.652D)</option>
+              <option value="0.25" selected>0.25 — 1550 nm (G.652D)</option>
+              <option value="0.22">0.22 — 1550 nm (G.657A2)</option>
+              <option value="0.30">0.30 — 1490 nm (GPON down)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Splices (count)</label>
+            <input type="number" id="lbSplices" value="4" min="0" step="1">
+            <div class="hint">0.10 dB each (typical)</div>
+          </div>
+          <div class="field">
+            <label>Connector pairs</label>
+            <input type="number" id="lbConns" value="2" min="0" step="1">
+            <div class="hint">0.30 dB each (typical)</div>
+          </div>
+          <div class="field">
+            <label>Splitter</label>
+            <select id="lbSplit">
+              <option value="0">No splitter — 0 dB</option>
+              <option value="3.5">1:2 — 3.5 dB</option>
+              <option value="7">1:4 — 7.0 dB</option>
+              <option value="10.5" selected>1:8 — 10.5 dB</option>
+              <option value="13.5">1:16 — 13.5 dB</option>
+              <option value="17">1:32 — 17.0 dB</option>
+              <option value="20.5">1:64 — 20.5 dB</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Safety margin (dB)</label>
+            <input type="number" id="lbMargin" value="3" min="0" step="0.5">
+          </div>
+          <div class="field">
+            <label>OLT TX power (dBm)</label>
+            <input type="number" id="lbTx" value="3" step="0.1">
+            <div class="hint">Typical +2 to +7 dBm</div>
+          </div>
+        </div>
+
+        <div>
+          <button class="btn" id="lbCalc">Calculate Link Budget</button>
+          <button class="btn ghost" id="lbReset">Reset</button>
+        </div>
+
+        <div class="result" id="lbOut" style="display:none"></div>
+      </div>
+    </section>
+
+    <!-- ============ dBm CONVERTER ============ -->
+    <section class="panel" id="tab-conv">
+      <div class="card">
+        <div class="grid">
+          <div class="field">
+            <label>Value</label>
+            <input type="number" id="cvVal" value="-20" step="0.1">
+          </div>
+          <div class="field">
+            <label>Unit</label>
+            <select id="cvUnit">
+              <option value="dbm" selected>dBm → mW</option>
+              <option value="mw">mW → dBm</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <button class="btn" id="cvCalc">Convert</button>
+        </div>
+
+        <div class="result" id="cvOut" style="display:none"></div>
+        <div class="safety">
+          Reference: GPON ONU RX window is <b>−8 to −27 dBm</b>. Below −28 dBm the link is flapping,
+          below −29 dBm you get LOS. Above −8 dBm you are burning the receiver — add an attenuator.
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ FAULT DISTANCE ============ -->
+    <section class="panel" id="tab-fault">
+      <div class="card">
+        <div class="grid">
+          <div class="field">
+            <label>OTDR measured dist (m)</label>
+            <input type="number" id="fdDist" value="1240" step="1">
+          </div>
+          <div class="field">
+            <label>Patch cord correction (m)</label>
+            <input type="number" id="fdPatch" value="-15" step="1">
+            <div class="hint">Subtract launch cord / add tail cord</div>
+          </div>
+          <div class="field">
+            <label>IOR set on OTDR</label>
+            <input type="number" id="fdIorSet" value="1.467" step="0.0001">
+          </div>
+          <div class="field">
+            <label>Actual fiber IOR</label>
+            <input type="number" id="fdIorReal" value="1.467" step="0.0001">
+            <div class="hint">G.652D ≈ 1.4670 @ 1550 nm</div>
+          </div>
+        </div>
+
+        <div>
+          <button class="btn" id="fdCalc">Calculate Fault Distance</button>
+        </div>
+
+        <div class="result" id="fdOut" style="display:none"></div>
+        <div class="safety">
+          ⚠️ OTDR only on <b>dead fiber</b>. Never fire an OTDR into a live PON — it will blind the
+          receivers and can take down the whole splitter. Isolate at the ODF first.
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <footer>
+    Fiber Networking AI · built by Brian Maisiba Ontieri · PWA Edition
+  </footer>
+</div>
+
+<script>
+/* =========================================================
+   0. PWA SERVICE WORKER (Offline Support)
+   ========================================================= */
+if ('serviceWorker' in navigator) {
+  const swCode = `
+    self.addEventListener('install', (e) => self.skipWaiting());
+    self.addEventListener('fetch', (e) => {
+      e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
+    });
+  `;
+  const blob = new Blob([swCode], {type: 'application/javascript'});
+  const swUrl = URL.createObjectURL(blob);
+  navigator.serviceWorker.register(swUrl).catch(err => console.log('SW registration failed:', err));
+}
+
+/* =========================================================
+   1. TABS
+   ========================================================= */
+document.querySelectorAll('.tab').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    document.querySelectorAll('.tab').forEach(function (b) { b.classList.remove('active'); });
+    document.querySelectorAll('.panel').forEach(function (p) { p.classList.remove('active'); });
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.tab).classList.add('active');
+  });
+});
+
+/* =========================================================
+   2. CHAT ENGINE
+   ========================================================= */
+var KB = [
+  {
+    keys: ['hello', 'hi', 'hey', 'habari', 'niaje', 'sasa', 'start', 'mambo'],
+    reply:
+"I am Fiber Networking AI. I can design your FTTH, calculate link budget, read your OTDR, and fix any LOS.\n\n" +
+"What are we working on today — Design, Installation, or Fault?\n\n" +
+"Fast path for a fault: give me these 3 things and I will point at the problem.\n" +
+"1) RX power at the ONU (dBm)\n" +
+"2) OTDR distance to the event (m)\n" +
+"3) Cable type + splitter ratio (e.g. G.652D, 1:8)"
+  },
+  {
+    keys: ['los', 'no light', 'red light', 'no signal', 'pon light', 'no internet', 'down', 'offline', 'hakuna'],
+    reply:
+"SYMPTOM: LOS — ONU red LOS LED, no PON link.\n\n" +
+"1. Diagnosis:\n" +
+"The ONU is receiving no valid optical signal, or the level is below receiver sensitivity.\n\n" +
+"2. Probable cause:\n" +
+"• Dirty or wet connector end-face at ONU / FAT\n" +
+"• APC mated to UPC (green to blue) — huge loss + reflection\n" +
+"• Broken drop: tight bend, rat bite, road works\n" +
+"• Blown splitter port at the FAT\n" +
+"• Cut feeder or distribution cable\n" +
+"• Dead OLT PON port — confirm on the OLT alarm first\n\n" +
+"3. Check (step by step):\n" +
+"a) OLT alarm: whole PON down or only this ONU?\n" +
+"b) Power meter at the ONU — any light at all? Expect −8 to −27 dBm\n" +
+"c) If 0 or 'Lo' — go to the FAT and test the drop from the FAT side\n" +
+"d) One-Click clean the ONU pigtail and FAT adapter, re-test\n" +
+"e) OTDR from the ODF if the whole PON is down\n" +
+"f) VFL down the drop to find the break (dead fiber only)\n\n" +
+"4. Fix:\n" +
+"• Clean first, re-test, and only then re-splice\n" +
+"• Replace broken drop, splice to < 0.05 dB estimated loss\n" +
+"• Re-port the ONU to a spare splitter leg if the port is blown\n\n" +
+"5. Prevention:\n" +
+"• SC/APC throughout FTTH (Safaricom / JTL / Liquid standard)\n" +
+"• Cap every unused port and pigtail\n" +
+"• Leave slack loops; never bend below 10x OD long term\n\n" +
+"⚠️ Never look into the fiber or the ONU port. 1490 nm is invisible — Class 1M laser."
+  },
+  {
+    keys: ['link budget', 'budget', 'power budget', 'calculate loss', 'total loss'],
+    reply:
+"LINK BUDGET — the only formula you need:\n\n" +
+"Total Loss = Fiber Loss + Splice Loss + Connector Loss + Splitter Loss + Safety Margin (3 dB)\n\n" +
+"Typical values:\n" +
+"• Fiber: 0.35 dB/km @1310 nm, 0.25 dB/km @1550 nm (G.652D)\n" +
+"• Splice: 0.05–0.10 dB each\n" +
+"• Connector pair: 0.30 dB each\n" +
+"• Safety margin: 3 dB always\n\n" +
+"Splitter losses:\n" +
+"1:2 = 3.5 dB | 1:4 = 7 dB | 1:8 = 10.5 dB\n" +
+"1:16 = 13.5 dB | 1:32 = 17 dB | 1:64 = 20.5 dB\n\n" +
+"WORKED EXAMPLE (5 km, 1550 nm, 1:8, 4 splices, 2 connectors):\n" +
+"Fiber 5 × 0.25 = 1.25 dB\n" +
+"Splices 4 × 0.10 = 0.40 dB\n" +
+"Connectors 2 × 0.30 = 0.60 dB\n" +
+"Splitter 1:8 = 10.50 dB\n" +
+"Safety margin = 3.00 dB\n" +
+"TOTAL = 15.75 dB\n\n" +
+"OLT TX +3 dBm − 15.75 dB = ONU RX −12.75 dBm → PASS (window −8 to −27 dBm).\n\n" +
+"Class B+ budget = 28 dB. Class C+ = 32 dB. Stay inside it.\n\n" +
+"Use the Link Budget tab above — I have already wired the math in."
+  },
+  {
+    keys: ['splitter', '1:8', '1:16', '1:32', '1:64', 'plc', 'power split'],
+    reply:
+"SPLITTER LOSSES (typical, add 0.2–0.5 dB for connector on the leg):\n\n" +
+"1:2  → 3.5 dB\n" +
+"1:4  → 7.0 dB\n" +
+"1:8  → 10.5 dB\n" +
+"1:16 → 13.5 dB\n" +
+"1:32 → 17.0 dB\n" +
+"1:64 → 20.5 dB\n\n" +
+"Design rules:\n" +
+"• Every 3 dB you add = half the optical power. 1:8 to 1:16 costs you 3 dB — that is half your light gone.\n" +
+"• GPON Class B+ (28 dB): 1:32 is the practical ceiling for most FTTH builds\n" +
+"• Cascaded splitters add up: 1:4 + 1:8 = 7 + 10.5 = 17.5 dB before fiber even starts\n" +
+"• Never cascade more than 2 stages\n\n" +
+"Field note: a 1:8 PLC splitter in a FAT in Buruburu is fine, but if the feeder is 8 km+ you are already at the edge — do the budget before you buy the splitter."
+  },
+  {
+    keys: ['otdr', 'trace', 'pulse width', 'event', 'reflectance', 'dead zone'],
+    reply:
+"OTDR SETTINGS — start here every time:\n\n" +
+"• IOR: 1.467 (G.652D @ 1550 nm) — wrong IOR = wrong distance\n" +
+"• Range: at least 2× the expected fiber length\n" +
+"• Pulse width: 10 ns for short links / FATs, 100 ns–1 µs for feeder, 1–10 µs for long haul\n" +
+"• Wavelength: 1550 nm for splice/break hunting, 1310 nm for general\n" +
+"• Averaging: 30 s minimum for clean traces\n\n" +
+"READING THE TRACE:\n" +
+"• Splice event: loss < 0.10 dB, reflectance < −60 dB (no spike) = good\n" +
+"• Connector event: reflectance around −50 dB is normal for APC\n" +
+"• Non-reflective step + end of trace = break (cut fiber)\n" +
+"• Reflective spike + end = broken connector or bad polish\n" +
+"• Ghost events = too much launch light, add a launch cord\n\n" +
+"ALWAYS use a launch cord (≥ 100 m) and a receive cord.\n\n" +
+"⚠️ Only on dead fiber. An OTDR into a live PON will take out the whole splitter."
+  },
+  {
+    keys: ['apc', 'upc', 'green', 'blue connector', 'polish', 'end face'],
+    reply:
+"APC vs UPC — NEVER MIX.\n\n" +
+"• APC = Angled Physical Contact, 8° polish, GREEN boot, return loss ≈ −60 dB\n" +
+"• UPC = Ultra Physical Contact, flat polish, BLUE boot, return loss ≈ −50 dB\n\n" +
+"Field rules:\n" +
+"• FTTH in Kenya (Safaricom, JTL, Liquid) = SC/APC green, end to end\n" +
+"• Data centre / active Ethernet = LC/UPC blue\n" +
+"• APC male into UPC female = air gap, high loss, high reflectance, and it damages both end-faces\n" +
+"• A mixed pair can add 2–5 dB and reflect back into the OLT laser\n\n" +
+"Check before you mate: look at the connector colour AND the end-face angle. Green to green, blue to blue."
+  },
+  {
+    keys: ['bend', 'radius', 'curvature', 'kink', 'tight'],
+    reply:
+"BEND RADIUS — this kills more FTTH links than cuts do.\n\n" +
+"• During installation: minimum 20 × cable OD\n" +
+"• Long term (in service): minimum 10 × cable OD\n" +
+"• Example: 5 mm drop cable → 100 mm during pull, 50 mm permanent\n" +
+"• Inside a FAT / closure tray: keep ≥ 30 mm coil radius, no tight zip ties\n\n" +
+"G.657A1 / A2 bend-insensitive fiber tolerates 10 mm / 7.5 mm at 1550 nm — but that is a datasheet limit, not a target. Do not design to the limit.\n\n" +
+"Symptoms of a bend fault:\n" +
+"• Link works at 1310 nm but fails at 1490/1550 nm\n" +
+"• RX power drops when the customer closes the door of the ONT box\n" +
+"• OTDR shows a small non-reflective bump, not a full break\n\n" +
+"Fix: re-dress the slack, use a proper slack loop, replace any kinked drop section."
+  },
+  {
+    keys: ['splice', 'fusion', 'splicer', 'joint', 'closure'],
+    reply:
+"SPLICING — target numbers:\n\n" +
+"• Estimated loss after fusion: < 0.05 dB (accept up to 0.10 dB)\n" +
+"• Validated by OTDR: < 0.10 dB bidirectional average\n" +
+"• Always do bidirectional OTDR (A→B and B→A) for acceptance\n\n" +
+"Splicer discipline:\n" +
+"• Correct arc program for the fiber type\n" +
+"• Strip 30–40 mm, clean with 99% IPA and a lint-free wipe, cleave at 90°\n" +
+"• Cleave length must match the splicer spec\n" +
+"• Never touch the cleaved end\n" +
+"• Check the estimated loss on screen before you accept\n\n" +
+"Closure / tray management:\n" +
+"• One splice per tray slot, no crossing fibers\n" +
+"• Keep 60 mm minimum bend inside the tray\n" +
+"• Heat-shrink fully seated, no exposed bare fiber"
+  },
+  {
+    keys: ['rx power', 'receive power', 'dbm', 'sensitivity', 'power level', 'overload'],
+    reply:
+"OPTICAL POWER WINDOWS — memorise these:\n\n" +
+"GPON (G.984):\n" +
+"• OLT TX: +2 to +7 dBm\n" +
+"• ONU RX: −8 to −27 dBm  ← normal working window\n" +
+"• ONU RX limit: −28 to −29 dBm → LOS / flapping\n" +
+"• ONU TX (burst): +0.5 to +5 dBm\n\n" +
+"XGS-PON (G.9807):\n" +
+"• ONU RX window roughly −8 to −28 dBm, OLT TX +2 to +5 dBm\n\n" +
+"Interpretation:\n" +
+"• RX −8 to −20 dBm → healthy, no action\n" +
+"• RX −20 to −25 dBm → working but marginal, plan a clean-up\n" +
+"• RX −25 to −27 dBm → at the edge, will drop in rain or heat\n" +
+"• RX worse than −28 dBm → fault, OTDR time\n" +
+"• RX better than −8 dBm → TOO HOT, add an inline attenuator (5 or 10 dB)\n\n" +
+"Always measure with a calibrated power meter at 1490 nm, and record the value at commissioning."
+  },
+  {
+    keys: ['pull', 'tension', 'pulling', 'blowing', 'install', 'duct', 'adss'],
+    reply:
+"CABLE HANDLING & INSTALLATION:\n\n" +
+"• Maximum pulling tension: 600 N (many drops are rated lower — check the datasheet)\n" +
+"• Use a pulling grip / swivel, never tie to the fiber\n" +
+"• Pull by hand or with a tension meter — no vehicle winching\n" +
+"• Sidewall pressure at bends is what breaks it, keep bend radius ≥ 20 × OD\n" +
+"• Blowing: use clean dry air, correct duct size, max 40–60 m/min\n" +
+"• Leave slack: 10–15 m per span, 1–2 m coiled at every closure and FAT\n\n" +
+"ADSS specific:\n" +
+"• Respect the span and sag limits\n" +
+"• Check the AT/ sheath position — do not clamp on the wrong axis\n" +
+"• Earthing per design at the specified poles\n\n" +
+"⚠️ Working at height: harness, helmet, lanyard, and a spotter. No exceptions."
+  },
+  {
+    keys: ['color', 'colour', 'tia', '598', 'color code', 'fibre id', 'fiber id'],
+    reply:
+"TIA-598-D COLOR CODE — 12 fibers per tube:\n\n" +
+"1 Blue\n2 Orange\n3 Green\n4 Brown\n5 Slate (grey)\n" +
+"6 White\n7 Red\n8 Black\n9 Yellow\n10 Violet\n" +
+"11 Rose (pink)\n12 Aqua (light blue)\n\n" +
+"For cables above 12 fibers, the tubes themselves are identified with the same 12-colour sequence.\n\n" +
+"Field tips:\n" +
+"• Count from the blue fiber — always blue first, never assume\n" +
+"• Identify the tube by colour and confirm with the count on the print\n" +
+"• Record fiber number, tube number and tray number in your splice sheet\n" +
+"• Use a VFL at the far end to confirm you have the right fiber before splicing"
+  },
+  {
+    keys: ['clean', 'cleaning', 'ipa', 'one click', 'dirty', 'contamination', 'wet'],
+    reply:
+"CLEANING — cheapest fix in fiber, and the most skipped.\n\n" +
+"Rule: clean every connector, every time, even brand new out of the bag.\n\n" +
+"Method:\n" +
+"1. One-Click cleaner on the adapter side (dry, single push, click out)\n" +
+"2. Lint-free wipe with 99% IPA on the connector end-face, dry wipe after\n" +
+"3. Inspect with a scope if you have one\n" +
+"4. Never blow with your mouth, never use a cloth that has been in your pocket\n\n" +
+"Cost of skipping it:\n" +
+"• Dust = 0.5–3 dB loss\n" +
+"• Fingerprint = 3–6 dB and it burns the end-face under power\n" +
+"• Water / mud in a Nairobi manhole = permanent damage\n\n" +
+"Always cap unused ports. A 5-shilling dust cap saves a 2-hour callout."
+  }
+];
+
+var FALLBACK =
+"I do not have that exact answer in my offline knowledge base — so I will not guess.\n\n" +
+"For a proper diagnosis, give me these 3 things:\n" +
+"1) Power reading at the ONU / OLT (dBm)\n" +
+"2) OTDR distance to the event (m)\n" +
+"3) Cable type and splitter ratio\n\n" +
+"Meanwhile, try one of these:\n" +
+"• LOS on ONU\n" +
+"• Link budget\n" +
+"• Splitter losses\n" +
+"• OTDR settings\n" +
+"• APC vs UPC\n" +
+"• Bend radius\n" +
+"• Cleaning fiber\n\n" +
+"If it is a design question, open the Link Budget tab.";
+
+var chatBox  = document.getElementById('chatBox');
+var chatInput = document.getElementById('chatInput');
+var sendBtn  = document.getElementById('sendBtn');
+
+function addMsg(role, text) {
+  var wrap = document.createElement('div');
+  wrap.className = 'msg ' + role;
+
+  var who = document.createElement('div');
+  who.className = 'who';
+  who.textContent = role === 'ai' ? 'AI' : 'YOU';
+
+  var bubble = document.createElement('div');
+  bubble.className = 'bubble';
+  bubble.textContent = text;
+  
+  // Highlight numbered headings
+  bubble.innerHTML = bubble.innerHTML.replace(
+    /(\d\.\s[A-Z][A-Za-z ]+:)/g,
+    '<b>$1</b>'
+  );
+
+  wrap.appendChild(who);
+  wrap.appendChild(bubble);
+  chatBox.appendChild(wrap);
+  
+  // Auto scroll to bottom
+  setTimeout(() => {
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }, 50);
+}
+
+function answerFor(text) {
+  var q = text.toLowerCase();
+  var best = null;
+  var bestScore = 0;
+
+  KB.forEach(function (entry) {
+    var score = 0;
+    entry.keys.forEach(function (k) {
+      if (q.indexOf(k) !== -1) score += k.length;
+    });
+    if (score > bestScore) { bestScore = score; best = entry; }
+  });
+
+  return best ? best.reply : FALLBACK;
+}
+
+function send(text) {
+  var val = (text !== undefined ? text : chatInput.value).trim();
+  if (!val) return;
+  addMsg('user', val);
+  chatInput.value = '';
+  setTimeout(function () { addMsg('ai', answerFor(val)); }, 200);
+}
+
+sendBtn.addEventListener('click', function () { send(); });
+chatInput.addEventListener('keydown', function (e) {
+  if (e.key === 'Enter') send();
+});
+document.querySelectorAll('.chip').forEach(function (c) {
+  c.addEventListener('click', function () { send(c.textContent); });
+});
+
+// Initial Greeting
+addMsg('ai',
+"I am Fiber Networking AI. I can design your FTTH, calculate link budget, read your OTDR, and fix any LOS.\n\n" +
+"What are we working on today — Design, Installation, or Fault?\n\n" +
+"For a fault, bring me:\n" +
+"1) RX power at the ONU (dBm)\n" +
+"2) OTDR distance to the event (m)\n" +
+"3) Cable type + splitter ratio"
+);
+
+/* =========================================================
+   3. LINK BUDGET CALCULATOR
+   ========================================================= */
+var SPLICE_DB = 0.10;
+var CONN_DB   = 0.30;
+
+function num(id, fallback) {
+  var v = parseFloat(document.getElementById(id).value);
+  return isNaN(v) ? fallback : v;
+}
+
+document.getElementById('lbCalc').addEventListener('click', function () {
+  var km       = num('lbLen', 0);
+  var att      = num('lbAtt', 0.25);
+  var splices  = num('lbSplices', 0);
+  var conns    = num('lbConns', 0);
+  var split    = parseFloat(document.getElementById('lbSplit').value);
+  var margin   = num('lbMargin', 3);
+  var tx       = num('lbTx', 3);
+
+  var fiberLoss = km * att;
+  var spliceLoss = splices * SPLICE_DB;
+  var connLoss = conns * CONN_DB;
+  var total = fiberLoss + spliceLoss + connLoss + split + margin;
+  var rx = tx - total;
+
+  var verdict, vclass;
+  if (rx > -8) {
+    vclass = 'warn';
+    verdict = 'TOO HOT — RX is above the −8 dBm overload point. Add an inline attenuator of about ' +
+              (Math.ceil(rx + 15)) + ' dB to bring RX into the −13 to −18 dBm range.';
+  } else if (rx < -27) {
+    vclass = 'fail';
+    verdict = 'FAIL — RX is below the −27 dBm Class B+ sensitivity. Re-check splices, connectors, ' +
+              'splitter ratio and fiber length. Shorten the link or reduce the split ratio.';
+  } else {
+    vclass = 'pass';
+    verdict = 'PASS — RX is inside the GPON Class B+ window (−8 to −27 dBm). ' +
+              'Headroom to the −27 dBm limit is ' + (rx + 27).toFixed(2) + ' dB.';
+  }
+
+  var headroomBplus = 28 - total;
+
+  var html =
+    row('Fiber loss (' + km + ' km × ' + att + ' dB/km)', fiberLoss.toFixed(2) + ' dB') +
+    row('Splice loss (' + splices + ' × ' + SPLICE_DB + ' dB)', spliceLoss.toFixed(2) + ' dB') +
+    row('Connector loss (' + conns + ' × ' + CONN_DB + ' dB)', connLoss.toFixed(2) + ' dB') +
+    row('Splitter loss', split.toFixed(2) + ' dB') +
+    row('Safety margin', margin.toFixed(2) + ' dB') +
+    '<div class="row total"><span>TOTAL LINK LOSS</span><span>' + total.toFixed(2) + ' dB</span></div>' +
+    '<div class="row total"><span>ESTIMATED ONU RX (' + tx + ' dBm TX)</span><span>' + rx.toFixed(2) + ' dBm</span></div>' +
+    row('Headroom vs 28 dB (Class B+ budget)', headroomBplus.toFixed(2) + ' dB') +
+    '<div class="verdict ' + vclass + '">' + verdict + '</div>';
+
+  var out = document.getElementById('lbOut');
+  out.innerHTML = html;
+  out.style.display = 'block';
+});
+
+function row(label, value) {
+  return '<div class="row"><span>' + label + '</span><span>' + value + '</span></div>';
+}
+
+document.getElementById('lbReset').addEventListener('click', function () {
+  document.getElementById('lbLen').value = 5;
+  document.getElementById('lbAtt').value = '0.25';
+  document.getElementById('lbSplices').value = 4;
+  document.getElementById('lbConns').value = 2;
+  document.getElementById('lbSplit').value = '10.5';
+  document.getElementById('lbMargin').value = 3;
+  document.getElementById('lbTx').value = 3;
+  document.getElementById('lbOut').style.display = 'none';
+});
+
+/* =========================================================
+   4. dBm <-> mW CONVERTER
+   ========================================================= */
+document.getElementById('cvCalc').addEventListener('click', function () {
+  var v = parseFloat(document.getElementById('cvVal').value);
+  var unit = document.getElementById('cvUnit').value;
+  var out = document.getElementById('cvOut');
+
+  if (isNaN(v)) {
+    out.innerHTML = '<div class="verdict fail">Enter a valid number.</div>';
+    out.style.display = 'block';
+    return;
+  }
+
+  var dbm, mw, uw;
+  if (unit === 'dbm') {
+    dbm = v;
+    mw = Math.pow(10, dbm / 10);
+  } else {
+    if (v <= 0) {
+      out.innerHTML = '<div class="verdict fail">mW must be greater than 0.</div>';
+      out.style.display = 'block';
+      return;
+    }
+    mw = v;
+    dbm = 10 * Math.log10(mw);
+  }
+  uw = mw * 1000;
+
+  var note;
+  if (dbm > -8) note = 'Above ONU overload — too hot, add an attenuator.';
+  else if (dbm >= -27) note = 'Inside the GPON ONU RX window (−8 to −27 dBm). Healthy.';
+  else if (dbm >= -29) note = 'Marginal / below sensitivity — link will flap or show LOS.';
+  else note = 'Far below sensitivity — hard fault. OTDR time.';
+
+  out.innerHTML =
+    row('dBm', dbm.toFixed(2) + ' dBm') +
+    row('Milliwatt', mw.toFixed(6) + ' mW') +
+    row('Microwatt', uw.toFixed(3) + ' µW') +
+    '<div class="verdict warn">' + note + '</div>';
+  out.style.display = 'block';
+});
+
+/* =========================================================
+   5. FAULT DISTANCE CALCULATOR
+   ========================================================= */
+document.getElementById('fdCalc').addEventListener('click', function () {
+  var d      = num('fdDist', 0);
+  var patch  = num('fdPatch', 0);
+  var iorSet = num('fdIorSet', 1.467);
+  var iorReal = num('fdIorReal', 1.467);
+
+  if (iorSet <= 0 || iorReal <= 0) {
+    document.getElementById('fdOut').innerHTML =
+      '<div class="verdict fail">IOR must be greater than 0.</div>';
+    document.getElementById('fdOut').style.display = 'block';
+    return;
+  }
+
+  // True length = measured × (IOR set / IOR actual)
+  var iorCorrected = d * (iorSet / iorReal);
+  var finalDist = iorCorrected + patch;
+
+  var html =
+    row('OTDR measured distance', d.toFixed(1) + ' m') +
+    row('IOR correction factor', (iorSet / iorReal).toFixed(5) + ' ×') +
+    row('Distance after IOR correction', iorCorrected.toFixed(1) + ' m') +
+    row('Patch cord correction', (patch >= 0 ? '+' : '') + patch.toFixed(1) + ' m') +
+    '<div class="row total"><span>PHYSICAL FAULT DISTANCE</span><span>' + finalDist.toFixed(1) + ' m</span></div>' +
+    row('In kilometres', (finalDist / 1000).toFixed(3) + ' km') +
+    '<div class="verdict warn">Walk or measure ' + finalDist.toFixed(0) +
+    ' m from the OTDR launch point along the route. Add 3–5% for cable slack if the route is not ' +
+    'straight — fiber length is always longer than map distance.</div>';
+
+  var out = document.getElementById('fdOut');
+  out.innerHTML = html;
+  out.style.display = 'block';
+});
+</script>
+</body>
+</html>
